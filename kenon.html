@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BAN WHATSHAP</title>
+<style>
+  :root{
+    --bg:#09090b;
+    --card:#0f1113;
+    --muted:#9aa6b2;
+    --accent1:#35f0b2;
+    --accent2:#7a6cff;
+    --text:#e6f7ee;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    background:linear-gradient(180deg,#050506 0%, #081018 100%);
+    font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+    color:var(--text);
+    padding:48px 20px;
+  }
+  .wrap{
+    width:100%;
+    max-width:620px;
+  }
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
+    border-radius:14px;
+    padding:28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  h1{
+    margin:0 0 18px 0;
+    text-align:center;
+    font-size:22px;
+  }
+  label{ display:block; margin:12px 0 6px; color:var(--muted); font-size:13px;}
+  input[type="text"], textarea, select{
+    width:100%;
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.04);
+    background:#0b0c0d;
+    color:var(--text);
+    font-size:14px;
+    outline:none;
+  }
+  textarea{ min-height:120px; resize:vertical; }
+  .btn{
+    display:inline-block;
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:none;
+    font-weight:700;
+    cursor:pointer;
+    background:linear-gradient(90deg,var(--accent1),var(--accent2));
+    color:#001;
+    box-shadow:0 8px 30px rgba(54,180,150,0.12);
+    margin-top:16px;
+  }
+  .mutesmall{ font-size:12px; color:var(--muted); margin-top:8px; }
+  .row{ display:flex; gap:10px; margin-top:10px; }
+  .col{ flex:1; }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.06);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .preview-box{
+    background:#070808;
+    border-radius:10px;
+    padding:12px;
+    margin-top:12px;
+    border:1px dashed rgba(255,255,255,0.03);
+    font-size:14px;
+    color:#dfffe8;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+
+  @media (max-width:640px){
+    body{ padding:24px 12px; align-items:center; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="region" aria-label="ban WhatsApp / Laporan simulator">
+      <h1>Ban WhatsApp By Putzz</h1>
+
+      <label for="nomor">Nomor Pelaku / Yang Dilaporkan</label>
+      <input id="nomor" type="text" placeholder="+6281234567890" inputmode="numeric" />
+
+      <label for="pelapor">Nama Pelalu</label>
+      <input id="pelapor" type="text" placeholder="Contoh: Rizky" />
+
+      <label for="pilih">Pilih jenis pesan</label>
+      <select id="pilih" aria-label="Pilih jenis pesan">
+        <option value="none" selected>-- Pilih template --</option>
+        <option value="spam">Spam </option>
+        <option value="permanent">Pemblokiran Permanen</option>
+      </select>
+
+      <label for="pesan">Isi pesan / lampiran (dapat diedit)</label>
+      <textarea id="pesan" placeholder="Pesan akan terisi otomatis sesuai opsi..."></textarea>
+
+      <button id="kirim" class="btn">KIRIM BANDING / LAPOR</button>
+
+      <div class="mutesmall">
+        Saat tombol ditekan, sistem akan membuka aplikasi email (Gmail atau lainnya) dengan pesan terisi otomatis. Kamu harus mengirim email secara manual dari aplikasi emailmu.
+      </div>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="col">
+          <button id="previewBtn" class="btn-ghost" title="Lihat preview">Preview</button>
+        </div>
+        <div style="width:140px">
+          <button id="copyBtn" class="btn-ghost" style="width:100%;">Salin</button>
+        </div>
+      </div>
+
+      <div id="previewArea" class="preview-box" style="display:none;margin-bottom:6px;">Preview akan muncul di sini</div>
+
+    </div>
+  </div>
+
+<script>
+  // Ganti supportEmail bila ingin alamat tujuan berbeda
+  const supportEmail = "support@whatsapp.com";
+
+  const pilih = document.getElementById('pilih');
+  const pesan = document.getElementById('pesan');
+  const nomor = document.getElementById('nomor');
+  const pelapor = document.getElementById('pelapor');
+  const kirim = document.getElementById('kirim');
+  const previewBtn = document.getElementById('previewBtn');
+  const previewArea = document.getElementById('previewArea');
+  const copyBtn = document.getElementById('copyBtn');
+
+  // TEKS yang kamu kirim (digunakan untuk kedua opsi sesuai permintaan)
+  const userProvidedText =
+`LAPORAN SPAM LINK JUDI
+
+Kepada WhatsApp,
+
+Saya ingin melaporkan nomor ini karena mengirim spam link judi online ke saya.
+
+- Nomor Pelapor: [Nomor Anda]
+- Nomor Pelaku: [Nomor Spammer]
+- Kronologi: Mengirim pesan berisi link judi tanpa diminta.
+
+Saya lampirkan bukti screenshot. Mohon tindakan lebih lanjut. Terima kasih.`;
+
+  // Templates: kita akan substitusi [Nomor Anda] dan [Nomor Spammer]
+  const templates = {
+    spam: userProvidedText,
+    permanent: userProvidedText
+  };
+
+  // saat pilih berubah, isi pesan otomatis (tetap bisa diedit)
+  pilih.addEventListener('change', () => {
+    const key = pilih.value;
+    const pel = pelapor.value.trim() || "[Nomor Anda]";
+    const n = nomor.value.trim() || "[Nomor Spammer]";
+    if (key === 'none') {
+      pesan.value = "";
+      return;
+    }
+    let t = templates[key] || "";
+    t = t.replace(/\[Nomor Anda\]/g, pel).replace(/\[Nomor Spammer\]/g, n);
+    pesan.value = t;
+  });
+
+  // jika user mengisi nomor/pelapor setelah template terisi, update placeholders
+  nomor.addEventListener('input', () => {
+    const key = pilih.value;
+    if (key === 'none') return;
+    const n = nomor.value.trim() || "[Nomor Spammer]";
+    // replace placeholder or any existing +62-like pattern (best-effort)
+    pesan.value = pesan.value.replace(/\[Nomor Spammer\]|(\+?\d[\d\s\-\(\)]{4,}\d)/g, n);
+  });
+  pelapor.addEventListener('input', () => {
+    const key = pilih.value;
+    if (key === 'none') return;
+    const p = pelapor.value.trim() || "[Nomor Anda]";
+    pesan.value = pesan.value.replace(/\[Nomor Anda\]|(\+?\d[\d\s\-\(\)]{4,}\d)/g, p);
+  });
+
+  // Preview
+  previewBtn.addEventListener('click', () => {
+    previewArea.style.display = 'block';
+    const n = nomor.value.trim() || "(nomor pelaku kosong)";
+    const p = pelapor.value.trim() || "(nomor pelapor kosong)";
+    const txt = `Nomor Pelaku: ${n}\nNomor Pelapor: ${p}\n\n${pesan.value || "(pesan kosong)"}`
+    previewArea.textContent = txt;
+    previewArea.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+
+  // Copy (salin pesan)
+  copyBtn.addEventListener('click', async () => {
+    const txt = pesan.value || "";
+    if (!txt) {
+      alert("Tidak ada teks untuk disalin.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(txt);
+      showToast("Pesan tersalin ke clipboard");
+    } catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast("Pesan tersalin (fallback)");
+    }
+  });
+
+  // Kirim: buka mail client via mailto:
+  kirim.addEventListener('click', () => {
+    const n = nomor.value.trim();
+    if (!n) {
+      if (!confirm("Nomor pelaku kosong. Lanjut buka email tanpa nomor?")) return;
+    }
+    const body = pesan.value || "";
+    const subject = encodeURIComponent("Laporan Spam / Banding — " + (n || "(nomor tidak diisi)"));
+    const mailto = `mailto:${encodeURIComponent(supportEmail)}?subject=${subject}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+  });
+
+  // small toast
+  function showToast(msg){
+    let t = document.createElement('div');
+    t.textContent = msg;
+    t.style.position='fixed';
+    t.style.left='50%';
+    t.style.transform='translateX(-50%)';
+    t.style.bottom='30px';
+    t.style.padding='10px 14px';
+    t.style.background='#0b0b0b';
+    t.style.border='1px solid rgba(255,255,255,0.04)';
+    t.style.borderRadius='8px';
+    t.style.color= 'var(--text)';
+    t.style.zIndex=9999;
+    document.body.appendChild(t);
+    setTimeout(()=>{ t.style.transition='opacity 220ms'; t.style.opacity='0'; }, 1200);
+    setTimeout(()=> document.body.removeChild(t), 1500);
+  }
+</script>
+</body>
+</html>
